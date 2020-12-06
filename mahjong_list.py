@@ -25,6 +25,7 @@ class Tile(object):
 
 
 class Player(object):
+    # 原来想要继承Node类，现在感觉并不需要，直接把Node实例化之后把val设为Player实例就可以了。
     def __init__(self, name, score, if_dealer):
         self.name = str(name)
         self.score = score
@@ -78,6 +79,7 @@ class Node(object):
 class Chain(object):
     def __init__(self):
         self._head = None
+        self.cursor = None
 
     def is_empty(self):
         return self._head is None
@@ -114,9 +116,18 @@ class Chain(object):
             return
         cur = self._head
         print(cur.value)
+        tmp = cur.value
         while cur.next != self._head:
             cur = cur.next
             print(cur.value)
+        return tmp
+
+    def go(self):
+        if self.cursor is None:
+            self.cursor = self._head
+        tmp = self.cursor.value
+        self.cursor = self.cursor.next
+        return tmp  # 返回的是当前要出牌的玩家
 
 
 def helper_generate_one_kind_tiles(kind):
@@ -200,6 +211,7 @@ def init_game():
             now_tiles = p4.draw_a_tile(now_tiles)
     # 跳牌
     tmp_player_list = [p1, p2, p3, p4]
+    circle = Chain()
     for p in tmp_player_list:
         if p.if_dealer:
             # 庄家取两张牌
@@ -208,23 +220,45 @@ def init_game():
         else:
             # 非庄家只取一张牌
             now_tiles = p.draw_a_tile(now_tiles)
-    return p1, p2, p3, p4, now_tiles
+
+    # 生成打牌方向
+    # TODO: 现在的方法太过复杂，但可以用。
+    # tmp_adding_list = [p1, p2, p3, p4, p1, p2, p3]
+    tmp_adding_list = [p4, p3, p2, p1, p4, p3, p2]  # 逆打
+    tmp_counter = 0
+    for item in tmp_adding_list:
+        if item.if_dealer:
+            circle.append(item)
+            tmp_counter += 1
+        if (not item.if_dealer) and tmp_counter >= 1:
+            circle.append(item)
+            tmp_counter += 1
+        if tmp_counter == 4:
+            break
+    return p1, p2, p3, p4, now_tiles, circle
 
 
 def main():
     start_time = time.time()
 
-    player1, player2, player3, player4, now_tiles = init_game()
+    player1, player2, player3, player4, now_tiles, rounder = init_game()
     # -------------------------------------------------------
     # print(tile_names(tmp_list))
-    # player1.vis_my_tiles()
-    # player2.vis_my_tiles()
-    # player3.vis_my_tiles()
-    # player4.vis_my_tiles()
+    player1.vis_my_tiles()
+    player2.vis_my_tiles()
+    player3.vis_my_tiles()
+    player4.vis_my_tiles()
+    rounder.go().discard_a_tile().vis()
     while len(now_tiles) is not 0:
-        now_tiles = player4.draw_a_tile(now_tiles)
+        now_player = rounder.go()
+        now_tiles = now_player.draw_a_tile(now_tiles)
         # print(len(now_tiles))
-        print(player4.discard_a_tile().vis())
+        now_player.discard_a_tile()
+    print("---------end---------")
+    player1.vis_my_tiles()
+    player2.vis_my_tiles()
+    player3.vis_my_tiles()
+    player4.vis_my_tiles()
     end_time = time.time()
     print(end_time - start_time)
 
