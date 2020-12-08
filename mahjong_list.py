@@ -237,6 +237,11 @@ def init_game():
             break
     return p1, p2, p3, p4, now_tiles, circle
 
+def test_qi() -> None:
+    """ this is function for branch merging test
+    """
+    pass
+
 
 def main():
     start_time = time.time()
