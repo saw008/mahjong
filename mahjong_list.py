@@ -9,31 +9,35 @@ Last modified: now
 # TODO: 目前的程序，每个人的手牌是以 list() 格式存储的，暂时不确定是list()还是set()更合理。
 import operator
 import random
-import time
 
 
 class Tile(object):
     def __init__(self, count, kind):
-        self.count = str(count)
-        self.kind = kind
+        self.__count = str(count)
+        self.__kind = kind
 
     def what(self):
-        return self.count + '_' + self.kind
+        return self.__count + '_' + self.__kind
 
     def vis(self):
-        return f"*---*\n| {self.count} |\n| {self.kind[0].upper()} |\n*---*"
+        return f"*---*\n| {self.__count} |\n| {self.__kind[0].upper()} |\n*---*"
 
 
 class Player(object):
     # 原来想要继承Node类，现在感觉并不需要，直接把Node实例化之后把val设为Player实例就可以了。
     def __init__(self, name, score, if_dealer):
-        self.name = str(name)
-        self.score = score
-        self.if_dealer = if_dealer
-        self.my_tiles = list()
+        self.__name = str(name)
+        self.__score = score
+        self.__if_dealer = if_dealer
+        self.__my_tiles = list()
 
-    def get_score(self):
-        return self.score
+    @property
+    def score(self):
+        return self.__score
+
+    @property
+    def if_dealer(self):
+        return self.__if_dealer
 
     def draw_a_tile(self, now_tiles_on_board):
         """
@@ -46,28 +50,28 @@ class Player(object):
         # TD: 目前是随机取一张牌，不合理，应该是取最前一张牌 -- 暂时觉着没问题
         temp_tile = random.sample(now_tiles_on_board, 1)[0]
         now_tiles_on_board.remove(temp_tile)
-        self.my_tiles.append(temp_tile)
+        self.__my_tiles.append(temp_tile)
         self.sort_my_tiles()  # 在每次取牌之后整理手牌
         return now_tiles_on_board
 
     def discard_a_tile(self):
         # TODO: 目前是随机打出一张牌，显然不合理，但以后再改
-        temp_tile = random.sample(self.my_tiles, 1)[0]
-        self.my_tiles.remove(temp_tile)
+        temp_tile = random.sample(self.__my_tiles, 1)[0]
+        self.__my_tiles.remove(temp_tile)
         self.sort_my_tiles()  # 在每次打牌之后整理手牌
         return temp_tile
 
     def get_my_tiles(self):
-        return self.my_tiles
+        return self.__my_tiles
 
     def sort_my_tiles(self):
         # TODO: now too complicated
         sort_kind_count = operator.attrgetter('kind', 'count')
-        self.my_tiles.sort(key=sort_kind_count)
-        return self.my_tiles
+        self.__my_tiles.sort(key=sort_kind_count)
+        return self.__my_tiles
 
     def vis_my_tiles(self):
-        print(f"Player {self.name}:\n" + tile_vis(self.get_my_tiles()))
+        print(f"Player {self.__name}:\n" + tile_vis(self.get_my_tiles()))
 
 
 class Node(object):
@@ -236,32 +240,3 @@ def init_game():
         if tmp_counter == 4:
             break
     return p1, p2, p3, p4, now_tiles, circle
-
-
-def main():
-    start_time = time.time()
-
-    player1, player2, player3, player4, now_tiles, rounder = init_game()
-    # -------------------------------------------------------
-    # print(tile_names(tmp_list))
-    player1.vis_my_tiles()
-    player2.vis_my_tiles()
-    player3.vis_my_tiles()
-    player4.vis_my_tiles()
-    rounder.go().discard_a_tile().vis()
-    while len(now_tiles) is not 0:
-        now_player = rounder.go()
-        now_tiles = now_player.draw_a_tile(now_tiles)
-        # print(len(now_tiles))
-        now_player.discard_a_tile()
-    print("---------end---------")
-    player1.vis_my_tiles()
-    player2.vis_my_tiles()
-    player3.vis_my_tiles()
-    player4.vis_my_tiles()
-    end_time = time.time()
-    print(end_time - start_time)
-
-
-if __name__ == '__main__':
-    main()
