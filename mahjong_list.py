@@ -16,6 +16,10 @@ class Tile(object):
         self.__count = str(count)
         self.__kind = kind
 
+    @property
+    def kind(self):
+        return self.__kind
+
     def what(self):
         return self.__count + '_' + self.__kind
 
@@ -30,6 +34,7 @@ class Player(object):
         self.__score = score
         self.__if_dealer = if_dealer
         self.__my_tiles = list()
+        self.__my_tiles_status = {}
 
     @property
     def score(self):
@@ -57,6 +62,7 @@ class Player(object):
     def discard_a_tile(self):
         # TODO: 目前是随机打出一张牌，显然不合理，但以后再改
         temp_tile = random.sample(self.__my_tiles, 1)[0]
+
         self.__my_tiles.remove(temp_tile)
         self.sort_my_tiles()  # 在每次打牌之后整理手牌
         return temp_tile
@@ -68,6 +74,18 @@ class Player(object):
         # TODO: now too complicated
         sort_kind_count = operator.attrgetter('kind', 'count')
         self.__my_tiles.sort(key=sort_kind_count)
+        tmp_w, tmp_b, tmp_t = 0, 0, 0
+        for one_tile in self.__my_tiles:
+            if one_tile.kind == 'wann':
+                tmp_w += 1
+            elif one_tile.kind == 'tiao':
+                tmp_t += 1
+            elif one_tile.kind == 'bing':
+                tmp_b += 1
+        self.__my_tiles_status.update({'w': tmp_w,
+                                       'b': tmp_b,
+                                       't': tmp_t})
+        print(self.__my_tiles_status)
         return self.__my_tiles
 
     def vis_my_tiles(self):
@@ -202,7 +220,7 @@ def init_game():
     all_tiles = helper_generate_one_kind_tiles(kinds[0]) + \
                 helper_generate_one_kind_tiles(kinds[1]) + \
                 helper_generate_one_kind_tiles(kinds[2])
-    # 开始第一轮发牌
+    # 开始初始发牌
     now_tiles = all_tiles
     for i in range(3):
         for j in range(4):
